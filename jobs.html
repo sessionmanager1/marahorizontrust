@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vacancies | Mara Horizon Trust</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .page-head{ padding:3rem 0 1.6rem; }
+  .filter-bar{
+    display:flex; gap:.8rem; flex-wrap:wrap; background:var(--white); border:1px solid var(--line);
+    border-radius:var(--radius-m); padding:1rem; margin-bottom:2rem;
+  }
+  .filter-bar input[type=text]{ flex:2; min-width:200px; }
+  .filter-bar select{ flex:1; min-width:160px; }
+  .job-ledger{ display:flex; flex-direction:column; gap:1rem; }
+  .job-row{
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius-m);
+    padding:1.4rem 1.6rem; display:grid; grid-template-columns:110px 1fr auto; gap:1.4rem; align-items:center;
+  }
+  @media (max-width:760px){ .job-row{ grid-template-columns:1fr; } }
+  .job-row .ref-col{ font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--slate); border-right:1px solid var(--line); padding-right:1.2rem; }
+  @media (max-width:760px){ .job-row .ref-col{ border-right:none; padding-right:0; } }
+  .job-row h3{ font-size:1.12rem; margin-bottom:.35rem; }
+  .job-meta{ display:flex; gap:.9rem; flex-wrap:wrap; font-size:.82rem; color:var(--slate); margin-top:.4rem; }
+  .job-meta span{ display:inline-flex; align-items:center; gap:.35rem; }
+  .cat-tag{ font-family:'JetBrains Mono',monospace; font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--pine-mid); background:#EAF1EC; padding:.3rem .6rem; border-radius:999px; margin-bottom:.5rem; display:inline-block; }
+
+  /* job detail / apply modal content */
+  .job-detail-head{ margin-bottom:1.6rem; }
+  .req-list{ list-style:none; padding:0; margin:0 0 1.6rem; }
+  .req-list li{ position:relative; padding-left:1.4rem; margin-bottom:.5rem; color:var(--slate); font-size:.9rem; }
+  .req-list li::before{ content:"—"; position:absolute; left:0; color:var(--amber); }
+  .apply-locked{ text-align:center; padding:1.4rem 0; }
+  .step-track{ display:flex; align-items:center; gap:.5rem; margin-bottom:1.6rem; }
+  .step-track .dot{ width:26px; height:26px; border-radius:50%; background:var(--cream-dim); color:var(--slate); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; font-family:'JetBrains Mono',monospace; }
+  .step-track .dot.on{ background:var(--pine); color:var(--cream); }
+  .step-track .bar{ flex:1; height:2px; background:var(--line); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav-row">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" fill="#1F3B2C"/>
+        <circle cx="20" cy="17" r="7" fill="#D98F2B"/>
+        <path d="M1 25 Q10 19 20 25 T39 25 V39 H1 Z" fill="#12241A"/>
+      </svg>
+      <div class="brand-text"><strong>Mara Horizon Trust</strong><span>Conservation Careers</span></div>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <a href="index.html">Home</a>
+      <a href="jobs.html" class="active">Vacancies</a>
+      <a href="employer.html">Employers</a>
+      <a href="admin.html">Admin</a>
+      <span id="navAuthSlot"></span>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap page-head">
+  <p class="eyebrow">Open Vacancies</p>
+  <h1 style="font-size:clamp(1.8rem,3.6vw,2.6rem); margin:.6rem 0 .5rem;">Current openings across East Africa.</h1>
+  <p class="muted">Search the registry below and apply directly — every submission is tracked from Received to Hired.</p>
+</div>
+
+<div class="wrap">
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Search by title or location…">
+    <select id="categoryFilter"><option value="">All categories</option></select>
+    <select id="typeFilter">
+      <option value="">All job types</option>
+      <option value="Full-time">Full-time</option>
+      <option value="Contract">Contract</option>
+      <option value="Seasonal">Seasonal</option>
+    </select>
+  </div>
+
+  <div class="job-ledger" id="jobLedger"></div>
+</div>
+
+<footer class="site">
+  <div class="wrap foot-bottom">
+    <span>© 2026 Mara Horizon Trust. All rights reserved.</span>
+    <span>Registry system MHT-2026</span>
+  </div>
+</footer>
+
+<!-- JOB DETAIL / APPLY MODAL -->
+<div class="overlay" id="jobOverlay">
+  <div class="modal wide">
+    <button class="modal-close" id="jobModalClose" aria-label="Close">×</button>
+    <div class="modal-body" id="jobModalBody"><!-- injected --></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+let currentJobId = null;
+
+function populateCategoryFilter(){
+  const sel = document.getElementById('categoryFilter');
+  MHT.jobs.categories().forEach(c => {
+    const opt = document.createElement('option'); opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+function renderLedger(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cat = document.getElementById('categoryFilter').value;
+  const type = document.getElementById('typeFilter').value;
+  const list = MHT.jobs.open().filter(j => {
+    const matchesQ = !q || j.title.toLowerCase().includes(q) || j.location.toLowerCase().includes(q);
+    const matchesCat = !cat || j.category === cat;
+    const matchesType = !type || j.type === type;
+    return matchesQ && matchesCat && matchesType;
+  });
+
+  const host = document.getElementById('jobLedger');
+  if(!list.length){
+    host.innerHTML = `<div class="empty"><strong>No vacancies match your search</strong>Try a different keyword or clear the filters.</div>`;
+    return;
+  }
+  host.innerHTML = list.map(j => {
+    const left = MHT.daysLeft(j.deadline);
+    return `
+    <div class="job-row reveal in">
+      <div class="ref-col mono">${j.ref}<br><span class="muted">Posted ${MHT.formatDate(j.posted)}</span></div>
+      <div>
+        <span class="cat-tag">${j.category}</span>
+        <h3>${j.title}</h3>
+        <div class="job-meta">
+          <span>📍 ${j.location}</span>
+          <span>🗂 ${j.type}</span>
+          <span>⏳ ${left >= 0 ? `Closes in ${left}d` : 'Closing soon'}</span>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-sm" onclick="openJob('${j.id}')">View &amp; Apply</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openJob(id){
+  currentJobId = id;
+  renderJobModal();
+  document.getElementById('jobOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeJobModal(){
+  document.getElementById('jobOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('jobModalClose').addEventListener('click', closeJobModal);
+document.getElementById('jobOverlay').addEventListener('click', e => { if(e.target.id==='jobOverlay') closeJobModal(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeJobModal(); });
+
+function renderJobModal(){
+  const job = MHT.jobs.byId(currentJobId);
+  const body = document.getElementById('jobModalBody');
+  if(!job){ body.innerHTML = '<p>This vacancy is no longer available.</p>'; return; }
+
+  const user = MHT.auth.currentUser();
+  const alreadyApplied = user && MHT.applications.hasApplied(user.id, job.id);
+
+  let actionHTML = '';
+  if(alreadyApplied){
+    actionHTML = `<div class="empty"><strong>Application already submitted</strong>Track its status from your applicant dashboard.<br><a class="btn btn-ghost btn-sm" href="profile.html" style="margin-top:1rem;">Go to My Applications</a></div>`;
+  } else if(user && user.role === 'applicant'){
+    actionHTML = renderApplyForm(job, user);
+  } else if(user){
+    actionHTML = `<div class="empty"><strong>Sign in as an applicant to apply</strong>You're signed in as ${user.role}. Please use an applicant account to submit applications.</div>`;
+  } else {
+    actionHTML = renderAuthGate(job);
+  }
+
+  body.innerHTML = `
+    <div class="job-detail-head">
+      <span class="cat-tag">${job.category}</span>
+      <p class="ref mono" style="margin:.3rem 0;">${job.ref}</p>
+      <h2 style="font-size:1.6rem;">${job.title}</h2>
+      <div class="job-meta" style="margin-top:.6rem;">
+        <span>📍 ${job.location}</span><span>🗂 ${job.type}</span><span>📅 Closes ${MHT.formatDate(job.deadline)}</span>
+      </div>
+    </div>
+    <p style="color:var(--slate);">${job.summary}</p>
+    <h4 style="font-size:.95rem; margin:1.4rem 0 .8rem;">Requirements</h4>
+    <ul class="req-list">${job.requirements.map(r => `<li>${r}</li>`).join('')}</ul>
+    <div class="horizon-rule tight" style="margin:1.6rem 0;"></div>
+    <div id="applyZone">${actionHTML}</div>
+  `;
+
+  if(user && user.role === 'applicant' && !alreadyApplied) wireApplyForm(job, user);
+  if(!user) wireAuthGate(job);
+}
+
+/* ---------- Auth gate (inline sign in / register) shown inside the apply modal ---------- */
+function renderAuthGate(job){
+  return `
+    <div class="gate" style="margin:0;">
+      <div class="tabbar">
+        <button type="button" class="active" data-tab="login">Sign in</button>
+        <button type="button" data-tab="register">Create profile</button>
+      </div>
+      <form id="loginForm">
+        <div class="field"><label>Email</label><input type="email" id="loginEmail" required></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPassword" required></div>
+        <button class="btn btn-primary btn-block" type="submit">Sign in &amp; continue</button>
+      </form>
+      <form id="registerForm" style="display:none;">
+        <div class="field"><label>Full name</label><input type="text" id="regName" required></div>
+        <div class="field"><label>Email</label><input type="email" id="regEmail" required></div>
+        <div class="field"><label>Phone</label><input type="tel" id="regPhone" required></div>
+        <div class="field"><label>Password</label><input type="password" id="regPassword" required></div>
+        <button class="btn btn-primary btn-block" type="submit">Create profile &amp; continue</button>
+      </form>
+    </div>`;
+}
+function wireAuthGate(job){
+  const loginTab = document.querySelector('[data-tab="login"]');
+  const regTab = document.querySelector('[data-tab="register"]');
+  const loginForm = document.getElementById('loginForm');
+  const regForm = document.getElementById('registerForm');
+  loginTab.addEventListener('click', () => { loginTab.classList.add('active'); regTab.classList.remove('active'); loginForm.style.display='block'; regForm.style.display='none'; });
+  regTab.addEventListener('click', () => { regTab.classList.add('active'); loginTab.classList.remove('active'); regForm.style.display='block'; loginForm.style.display='none'; });
+
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const res = MHT.auth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+    if(res.error){ MHT.toast(res.error, 'err'); return; }
+    if(res.user.role !== 'applicant'){ MHT.toast('Please sign in with an applicant account to apply.', 'err'); MHT.auth.logout(); return; }
+    MHT.toast('Signed in.', 'ok'); MHT.paintAuthNav(); renderJobModal();
+  });
+  regForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const res = MHT.auth.register({
+      role:'applicant', name:document.getElementById('regName').value, email:document.getElementById('regEmail').value,
+      phone:document.getElementById('regPhone').value, password:document.getElementById('regPassword').value
+    });
+    if(res.error){ MHT.toast(res.error, 'err'); return; }
+    MHT.toast('Profile created.', 'ok'); MHT.paintAuthNav(); renderJobModal();
+  });
+}
+
+/* ---------- Application form ---------- */
+function renderApplyForm(job, user){
+  return `
+    <h4 style="font-size:1rem; margin-bottom:1rem;">Apply for this role</h4>
+    <form id="applyForm">
+      <div class="form-grid">
+        <div class="field"><label>Full name</label><input type="text" id="apName" value="${user.name}" required></div>
+        <div class="field"><label>Email</label><input type="email" id="apEmail" value="${user.email}" required></div>
+        <div class="field"><label>Phone</label><input type="tel" id="apPhone" value="${user.phone||''}" required></div>
+        <div class="field"><label>Years of experience</label><input type="number" min="0" id="apExperience" required></div>
+      </div>
+      <div class="field"><label>Relevant skills &amp; qualifications</label><textarea id="apSkills" placeholder="e.g. KPSGA Silver guiding certificate, 4 years in the Maasai Mara…" required></textarea></div>
+
+      <div class="form-grid">
+        <div class="field"><label>CV / Resume *</label>${fileDropHTML('apCv')}</div>
+        <div class="field"><label>National ID / Passport *</label>${fileDropHTML('apId')}</div>
+        <div class="field"><label>Passport photo *</label>${fileDropHTML('apPhoto')}</div>
+        <div class="field"><label>Driving licence (if applicable)</label>${fileDropHTML('apLicence')}</div>
+      </div>
+      <div class="field"><label>Certificates (professional / academic) *</label>${fileDropHTML('apCerts', true)}</div>
+
+      <button class="btn btn-amber btn-block" type="submit">Submit Application →</button>
+    </form>`;
+}
+function fileDropHTML(id, multiple=false){
+  return `<label class="file-drop" for="${id}"><span id="${id}Label">Choose file${multiple?'s':''}…</span><span>📎</span><input type="file" id="${id}" ${multiple?'multiple':''}></label>`;
+}
+function wireFileDrop(id){
+  const input = document.getElementById(id);
+  const label = document.getElementById(id+'Label');
+  input.addEventListener('change', () => {
+    const drop = input.closest('.file-drop');
+    if(input.files.length){
+      drop.classList.add('filled');
+      label.textContent = input.files.length > 1 ? `${input.files.length} files selected` : input.files[0].name;
+    } else { drop.classList.remove('filled'); label.textContent = 'Choose file…'; }
+  });
+}
+function wireApplyForm(job, user){
+  ['apCv','apId','apPhoto','apLicence','apCerts'].forEach(wireFileDrop);
+  document.getElementById('applyForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const cv = document.getElementById('apCv').files[0];
+    const idDoc = document.getElementById('apId').files[0];
+    const photo = document.getElementById('apPhoto').files[0];
+    const licence = document.getElementById('apLicence').files[0];
+    const certs = Array.from(document.getElementById('apCerts').files);
+    if(!cv || !idDoc || !photo || !certs.length){
+      MHT.toast('Please attach your CV, ID, passport photo and at least one certificate.', 'err');
+      return;
+    }
+    MHT.applications.create({
+      jobId: job.id, userId: user.id,
+      name: document.getElementById('apName').value,
+      email: document.getElementById('apEmail').value,
+      phone: document.getElementById('apPhone').value,
+      experience: document.getElementById('apExperience').value,
+      skills: document.getElementById('apSkills').value,
+      documents: {
+        cv: MHT.fileMeta(cv), idDoc: MHT.fileMeta(idDoc), photo: MHT.fileMeta(photo),
+        licence: MHT.fileMeta(licence), certs: certs.map(MHT.fileMeta)
+      }
+    });
+    MHT.toast('Application submitted — a confirmation has been sent to your email.', 'ok');
+    renderJobModal();
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', renderLedger);
+document.getElementById('categoryFilter').addEventListener('change', renderLedger);
+document.getElementById('typeFilter').addEventListener('change', renderLedger);
+
+populateCategoryFilter();
+renderLedger();
+</script>
+</body>
+</html>

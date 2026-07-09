@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employer Dashboard | Mara Horizon Trust</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .dash-head{ padding:2.8rem 0 1.6rem; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem; }
+  .panel{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius-m); padding:1.6rem; margin-bottom:1.6rem; }
+  .panel h3{ font-size:1.1rem; margin-bottom:1.1rem; }
+  .demo-note{ font-size:.78rem; color:var(--slate); background:var(--amber-pale); border-radius:var(--radius-s); padding:.7rem .9rem; margin-bottom:1.4rem; }
+  .job-select-row{ display:flex; gap:.8rem; flex-wrap:wrap; align-items:center; margin-bottom:1.2rem; }
+  .job-select-row select{ max-width:420px; }
+  .applicant-row td .doc-chip{ display:inline-block; font-size:.7rem; background:var(--cream-dim); color:var(--slate); padding:.2rem .55rem; border-radius:999px; margin:.15rem .25rem .15rem 0; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav-row">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" fill="#1F3B2C"/>
+        <circle cx="20" cy="17" r="7" fill="#D98F2B"/>
+        <path d="M1 25 Q10 19 20 25 T39 25 V39 H1 Z" fill="#12241A"/>
+      </svg>
+      <div class="brand-text"><strong>Mara Horizon Trust</strong><span>Conservation Careers</span></div>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Vacancies</a>
+      <a href="employer.html" class="active">Employers</a>
+      <a href="admin.html">Admin</a>
+      <span id="navAuthSlot"></span>
+    </nav>
+  </div>
+</header>
+
+<div id="pageContent" class="wrap"></div>
+
+<footer class="site">
+  <div class="wrap foot-bottom">
+    <span>© 2026 Mara Horizon Trust. All rights reserved.</span>
+    <span>Registry system MHT-2026</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+function render(){
+  const host = document.getElementById('pageContent');
+  const user = MHT.auth.currentUser();
+
+  if(!user || user.role !== 'employer'){
+    host.innerHTML = `
+      <div class="gate">
+        <p class="eyebrow" style="justify-content:center;">Employer Access</p>
+        <h2 class="text-center" style="margin:.6rem 0 1.2rem;">Sign in to your employer dashboard</h2>
+        <div class="demo-note">Demo employer login — email: <strong>employer@marahorizontrust.org</strong> · password: <strong>employer123</strong></div>
+        <form id="loginForm">
+          <div class="field"><label>Email</label><input type="email" id="loginEmail" required></div>
+          <div class="field"><label>Password</label><input type="password" id="loginPassword" required></div>
+          <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        </form>
+      </div>`;
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const res = MHT.auth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+      if(res.error){ MHT.toast(res.error, 'err'); return; }
+      if(res.user.role !== 'employer'){ MHT.toast('Please sign in with an employer account.', 'err'); MHT.auth.logout(); return; }
+      MHT.toast('Signed in.', 'ok'); MHT.paintAuthNav(); render();
+    });
+    return;
+  }
+
+  const myJobs = MHT.jobs.byEmployer(user.id).concat(MHT.jobs.byEmployer('employer_demo').filter(j=>user.id==='employer_demo'));
+  const jobsList = MHT.jobs.all().filter(j => j.postedBy === user.id);
+
+  host.innerHTML = `
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Employer Dashboard</p>
+        <h1 style="font-size:clamp(1.6rem,3vw,2.2rem); margin-top:.5rem;">${user.org || user.name}</h1>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+
+    <div class="panel">
+      <h3>Post a new vacancy</h3>
+      <form id="jobForm">
+        <div class="form-grid">
+          <div class="field"><label>Job title</label><input type="text" id="jTitle" required></div>
+          <div class="field"><label>Category</label>
+            <select id="jCategory" required>
+              <option value="">Select a category</option>
+              <option>Wildlife Officer</option><option>Game Ranger</option><option>Driver</option>
+              <option>Mechanic</option><option>Security</option><option>Administrator</option>
+              <option>Accountant</option><option>Tour Guide</option><option>Hospitality</option>
+              <option>Conservation Specialist</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Location</label><input type="text" id="jLocation" required></div>
+          <div class="field"><label>Job type</label>
+            <select id="jType" required><option>Full-time</option><option>Contract</option><option>Seasonal</option></select>
+          </div>
+          <div class="field"><label>Application deadline</label><input type="date" id="jDeadline" required></div>
+        </div>
+        <div class="field"><label>Role summary</label><textarea id="jSummary" required placeholder="One or two sentences describing the role…"></textarea></div>
+        <div class="field"><label>Requirements (one per line)</label><textarea id="jRequirements" required placeholder="Diploma in Wildlife Management&#10;3+ years field experience"></textarea></div>
+        <button class="btn btn-amber" type="submit">Publish Vacancy →</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3>My posted vacancies (${jobsList.length})</h3>
+      ${jobsList.length ? `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ref</th><th>Title</th><th>Applicants</th><th>Status</th><th>Deadline</th><th></th></tr></thead>
+          <tbody>
+            ${jobsList.map(j => `
+              <tr>
+                <td class="ref">${j.ref}</td>
+                <td>${j.title}</td>
+                <td>${MHT.applications.byJob(j.id).length}</td>
+                <td><span class="badge ${j.status==='open'?'badge-open':'badge-closed'}">${j.status}</span></td>
+                <td>${MHT.formatDate(j.deadline)}</td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" onclick="toggleJob('${j.id}')">${j.status==='open'?'Close':'Reopen'}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteJob('${j.id}')">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : `<p class="small muted">You haven't posted any vacancies yet.</p>`}
+    </div>
+
+    <div class="panel">
+      <h3>Review applicants</h3>
+      <div class="job-select-row">
+        <select id="jobPicker">
+          <option value="">Select a vacancy…</option>
+          ${jobsList.map(j => `<option value="${j.id}">${j.title} (${MHT.applications.byJob(j.id).length})</option>`).join('')}
+        </select>
+        <input type="text" id="applicantSearch" placeholder="Filter by name or skill…" style="max-width:260px;">
+      </div>
+      <div id="applicantTableHost"><p class="small muted">Select a vacancy above to review its applicants.</p></div>
+    </div>
+  `;
+
+  document.getElementById('logoutBtn').addEventListener('click', () => { MHT.auth.logout(); MHT.paintAuthNav(); render(); });
+  document.getElementById('jobForm').addEventListener('submit', e => {
+    e.preventDefault();
+    MHT.jobs.create({
+      title:document.getElementById('jTitle').value,
+      category:document.getElementById('jCategory').value,
+      location:document.getElementById('jLocation').value,
+      type:document.getElementById('jType').value,
+      deadline:document.getElementById('jDeadline').value,
+      summary:document.getElementById('jSummary').value,
+      requirements:document.getElementById('jRequirements').value.split('\n').map(s=>s.trim()).filter(Boolean),
+      postedBy:user.id
+    });
+    MHT.toast('Vacancy published.', 'ok');
+    render();
+  });
+  document.getElementById('jobPicker').addEventListener('change', renderApplicants);
+  document.getElementById('applicantSearch').addEventListener('input', renderApplicants);
+}
+
+function toggleJob(id){
+  const job = MHT.jobs.byId(id);
+  MHT.jobs.update(id, { status: job.status==='open' ? 'closed' : 'open' });
+  MHT.toast('Vacancy updated.', 'ok'); render();
+}
+function deleteJob(id){
+  if(!confirm('Delete this vacancy? This cannot be undone.')) return;
+  MHT.jobs.remove(id); MHT.toast('Vacancy deleted.', 'ok'); render();
+}
+
+function renderApplicants(){
+  const jobId = document.getElementById('jobPicker').value;
+  const q = document.getElementById('applicantSearch').value.trim().toLowerCase();
+  const host = document.getElementById('applicantTableHost');
+  if(!jobId){ host.innerHTML = '<p class="small muted">Select a vacancy above to review its applicants.</p>'; return; }
+
+  const rows = MHT.applications.byJob(jobId).filter(a =>
+    !q || a.name.toLowerCase().includes(q) || (a.skills||'').toLowerCase().includes(q)
+  );
+
+  if(!rows.length){ host.innerHTML = '<div class="empty"><strong>No applicants yet</strong>Check back once candidates start applying.</div>'; return; }
+
+  host.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ref</th><th>Applicant</th><th>Experience</th><th>Documents</th><th>Status</th></tr></thead>
+        <tbody>
+          ${rows.map(a => `
+            <tr class="applicant-row">
+              <td class="ref">${a.ref}</td>
+              <td><strong>${a.name}</strong><br><span class="small muted">${a.email}</span></td>
+              <td>${a.experience} yrs</td>
+              <td>
+                ${a.documents.cv ? `<span class="doc-chip">CV</span>`:''}
+                ${a.documents.idDoc ? `<span class="doc-chip">ID</span>`:''}
+                ${a.documents.photo ? `<span class="doc-chip">Photo</span>`:''}
+                ${a.documents.licence ? `<span class="doc-chip">Licence</span>`:''}
+                ${a.documents.certs && a.documents.certs.length ? `<span class="doc-chip">${a.documents.certs.length} Cert(s)</span>`:''}
+              </td>
+              <td>
+                <select onchange="updateStatus('${a.id}', this.value)" style="padding:.4rem .6rem; font-size:.8rem;">
+                  ${['Received','Under Review','Shortlisted','Interview','Hired','Rejected'].map(s => `<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
+                </select>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function updateStatus(appId, status){
+  MHT.applications.updateStatus(appId, status);
+  MHT.toast('Applicant status updated.', 'ok');
+  renderApplicants();
+}
+
+render();
+</script>
+</body>
+</html>

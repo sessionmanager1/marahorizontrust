@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mara Horizon Trust | Wildlife &amp; Conservation Careers</title>
+<meta name="description" content="Mara Horizon Trust connects qualified professionals with rewarding careers in wildlife conservation, tourism and hospitality across East Africa.">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  /* ---------- Page-specific: hero ---------- */
+  .hero{ padding:3.6rem 0 4.4rem; position:relative; overflow:hidden; }
+  .hero::before{
+    content:""; position:absolute; top:-160px; right:-160px; width:440px; height:440px; border-radius:50%;
+    background:radial-gradient(circle, rgba(217,143,43,.18), transparent 70%);
+  }
+  .hero-grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:3rem; align-items:center; position:relative; }
+  @media (max-width:940px){ .hero-grid{ grid-template-columns:1fr; } }
+  .hero h1{ font-size:clamp(2.3rem,4.6vw,3.6rem); margin:1rem 0 1.2rem; }
+  .hero h1 em{ font-style:normal; color:var(--amber); }
+  .hero p.lede{ font-size:1.08rem; color:var(--slate); max-width:46ch; margin-bottom:1.8rem; }
+  .hero-ctas{ display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2.2rem; }
+  .hero-stats{ display:flex; gap:2.2rem; flex-wrap:wrap; }
+  .hero-stats div strong{ display:block; font-family:'Newsreader',serif; font-size:1.5rem; color:var(--pine-deep); }
+  .hero-stats div span{ font-family:'JetBrains Mono',monospace; font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--slate); }
+
+  .horizon-art{
+    position:relative; border-radius:var(--radius-l); overflow:hidden; aspect-ratio:4/3.1;
+    background:linear-gradient(180deg, #FBE9C6 0%, #F0C879 32%, var(--pine-mid) 32%, var(--pine) 100%);
+    box-shadow:var(--shadow-2);
+  }
+  .horizon-art .sun{
+    position:absolute; left:50%; top:26%; width:96px; height:96px; border-radius:50%;
+    background:var(--amber); transform:translate(-50%,-50%); box-shadow:0 0 60px rgba(217,143,43,.7);
+  }
+  .horizon-art .hill{ position:absolute; bottom:0; left:0; right:0; height:52%; background:var(--pine-deep); clip-path:polygon(0 60%,15% 40%,32% 55%,50% 30%,68% 52%,84% 38%,100% 55%,100% 100%,0 100%); }
+  .horizon-art .ref-tag{
+    position:absolute; bottom:1.2rem; left:1.2rem; background:rgba(18,36,26,.72); color:var(--amber-pale);
+    font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:.5rem .8rem; border-radius:999px; letter-spacing:.06em;
+  }
+
+  /* ---------- Feature grid ---------- */
+  .feat-card{ border-left:2px solid var(--amber); padding-left:1.1rem; }
+  .feat-card h3{ font-size:1.05rem; margin-bottom:.45rem; }
+  .feat-card p{ color:var(--slate); font-size:.9rem; margin:0; }
+
+  /* ---------- Roles cloud ---------- */
+  .roles-cloud{ display:flex; flex-wrap:wrap; gap:.7rem; }
+  .role-chip{
+    font-size:.86rem; font-weight:600; color:var(--pine-deep); background:var(--white);
+    border:1px solid var(--line); padding:.6rem 1.05rem; border-radius:999px;
+  }
+
+  /* ---------- How it works ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:1.4rem; }
+  @media (max-width:900px){ .steps{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:560px){ .steps{ grid-template-columns:1fr; } }
+  .step{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius-m); padding:1.6rem; }
+  .step .n{ font-family:'JetBrains Mono',monospace; color:var(--amber); font-weight:700; font-size:.8rem; margin-bottom:.6rem; }
+  .step h4{ font-size:1.05rem; margin-bottom:.5rem; }
+  .step p{ font-size:.86rem; color:var(--slate); margin:0; }
+
+  /* ---------- CTA band ---------- */
+  .cta-band{ background:var(--pine); color:var(--cream); border-radius:var(--radius-l); padding:3rem 2.6rem; display:flex; justify-content:space-between; align-items:center; gap:2rem; flex-wrap:wrap; }
+  .cta-band h2{ color:var(--cream); font-size:1.7rem; max-width:32ch; }
+  .cta-band p{ color:var(--amber-pale); max-width:40ch; margin:.5rem 0 0; font-size:.92rem; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav-row">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" fill="#1F3B2C"/>
+        <circle cx="20" cy="17" r="7" fill="#D98F2B"/>
+        <path d="M1 25 Q10 19 20 25 T39 25 V39 H1 Z" fill="#12241A"/>
+      </svg>
+      <div class="brand-text">
+        <strong>Mara Horizon Trust</strong>
+        <span>Conservation Careers</span>
+      </div>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <a href="index.html" class="active">Home</a>
+      <a href="jobs.html">Vacancies</a>
+      <a href="employer.html">Employers</a>
+      <a href="admin.html">Admin</a>
+      <span id="navAuthSlot"></span>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal in">
+      <p class="eyebrow">Wildlife &amp; Conservation Recruitment · East Africa</p>
+      <h1>Where conservation careers <em>begin</em>.</h1>
+      <p class="lede">Mara Horizon Trust connects qualified professionals with rewarding careers in wildlife protection, tourism and hospitality — and gives employers a fast, transparent way to find them.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-amber" href="jobs.html">Browse Vacancies →</a>
+        <a class="btn btn-ghost" href="employer.html">Post a Vacancy</a>
+      </div>
+      <div class="horizon-rule tight" style="margin-bottom:1.6rem;"></div>
+      <div class="hero-stats">
+        <div><strong>12</strong><span>Role Categories</span></div>
+        <div><strong>4</strong><span>Countries Covered</span></div>
+        <div><strong>24/7</strong><span>Application Tracking</span></div>
+      </div>
+    </div>
+    <div class="horizon-art reveal in">
+      <div class="sun"></div>
+      <div class="hill"></div>
+      <span class="ref-tag mono">REGISTRY — MHT-2026</span>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <p class="eyebrow">Welcome</p>
+    <h2 style="font-size:clamp(1.5rem,3vw,2.1rem); max-width:56ch; margin-top:.6rem;">A premier tour and conservation employer, built for talent that protects the wild.</h2>
+    <p class="muted" style="max-width:66ch; margin-top:1rem;">Mara Horizon Trust is a modern online recruitment platform designed to simplify hiring for both job seekers and employers in the wildlife and conservation sector — supporting roles from rangers and drivers to accountants and conservation specialists, with every application tracked from submission to offer.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:2rem;">
+  <div class="wrap">
+    <p class="eyebrow">Key Features</p>
+    <h2 style="font-size:clamp(1.6rem,3.2vw,2.2rem); margin:.6rem 0 2.4rem;">Everything a recruitment process needs, in one registry.</h2>
+    <div class="grid g3">
+      <div class="feat-card reveal"><h3>Browse &amp; search vacancies</h3><p>Filter open roles by category, location and job type in real time.</p></div>
+      <div class="feat-card reveal"><h3>Apply online</h3><p>Submit a complete application without printing a single form.</p></div>
+      <div class="feat-card reveal"><h3>Applicant profiles</h3><p>Create and manage a reusable profile across every application.</p></div>
+      <div class="feat-card reveal"><h3>Secure document upload</h3><p>Attach your CV, certificates, ID, passport photo and driving licence.</p></div>
+      <div class="feat-card reveal"><h3>Real-time status tracking</h3><p>Watch each application move from Received to Hired.</p></div>
+      <div class="feat-card reveal"><h3>Instant notifications</h3><p>Get alerted the moment a new vacancy or status update lands.</p></div>
+      <div class="feat-card reveal"><h3>Apply to multiple roles</h3><p>One profile, unlimited applications, no repeated paperwork.</p></div>
+      <div class="feat-card reveal"><h3>Mobile-friendly</h3><p>Manage your applications from a phone as easily as a laptop.</p></div>
+      <div class="feat-card reveal"><h3>Employer dashboard</h3><p>Post vacancies and review candidates from a single screen.</p></div>
+      <div class="feat-card reveal"><h3>Qualification filtering</h3><p>Employers can search applicants by skills and experience.</p></div>
+      <div class="feat-card reveal"><h3>Confirmation on submission</h3><p>Every application is acknowledged the moment it's received.</p></div>
+      <div class="feat-card reveal"><h3>Administrative oversight</h3><p>A control centre for managing vacancies, applicants and users.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight" style="background:var(--cream-dim);">
+  <div class="wrap">
+    <p class="eyebrow">Who We Recruit For</p>
+    <h2 style="font-size:clamp(1.5rem,3vw,2rem); margin:.6rem 0 1.6rem;">Careers across the conservation economy.</h2>
+    <div class="roles-cloud reveal">
+      <span class="role-chip">Wildlife Officers</span>
+      <span class="role-chip">Game Rangers</span>
+      <span class="role-chip">Drivers</span>
+      <span class="role-chip">Mechanics</span>
+      <span class="role-chip">Security Personnel</span>
+      <span class="role-chip">Administrators</span>
+      <span class="role-chip">Accountants</span>
+      <span class="role-chip">Tour Guides</span>
+      <span class="role-chip">Hospitality Staff</span>
+      <span class="role-chip">Conservation Specialists</span>
+      <span class="role-chip">Other Skilled Professionals</span>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">How It Works</p>
+    <h2 style="font-size:clamp(1.6rem,3.2vw,2.2rem); margin:.6rem 0 2.2rem;">From profile to placement.</h2>
+    <div class="steps">
+      <div class="step reveal"><div class="n">01</div><h4>Create your profile</h4><p>Register once and upload your core documents.</p></div>
+      <div class="step reveal"><div class="n">02</div><h4>Browse &amp; apply</h4><p>Find open roles and submit applications in minutes.</p></div>
+      <div class="step reveal"><div class="n">03</div><h4>Track your status</h4><p>Follow every application from Received to Hired.</p></div>
+      <div class="step reveal"><div class="n">04</div><h4>Get hired</h4><p>Employers reach out directly once you're shortlisted.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <div>
+        <h2>Hiring for a conservancy, lodge or park?</h2>
+        <p>Post a vacancy and reach qualified candidates across East Africa's conservation sector today.</p>
+      </div>
+      <a class="btn btn-amber" href="employer.html">Open Employer Dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap foot-grid">
+    <div>
+      <strong style="font-family:'Newsreader',serif; font-size:1.1rem; color:var(--cream);">Mara Horizon Trust</strong>
+      <p class="small" style="color:var(--amber-pale); margin-top:.8rem; max-width:36ch;">Connecting qualified professionals with rewarding careers in wildlife conservation, tourism and hospitality.</p>
+    </div>
+    <div>
+      <h4>Candidates</h4>
+      <ul>
+        <li><a href="jobs.html">Browse vacancies</a></li>
+        <li><a href="profile.html">My applications</a></li>
+        <li><a href="profile.html">Create profile</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Employers</h4>
+      <ul>
+        <li><a href="employer.html">Post a vacancy</a></li>
+        <li><a href="employer.html">Review applicants</a></li>
+        <li><a href="admin.html">Admin console</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li>info@marahorizontrust.org</li>
+        <li>+254 700 000 111</li>
+        <li>Nairobi, Kenya</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>© 2026 Mara Horizon Trust. All rights reserved.</span>
+    <span>Registry system MHT-2026</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

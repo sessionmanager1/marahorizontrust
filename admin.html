@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Console | Mara Horizon Trust</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .dash-head{ padding:2.8rem 0 1.6rem; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem; }
+  .panel{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius-m); padding:1.6rem; margin-bottom:1.6rem; }
+  .panel h3{ font-size:1.1rem; margin-bottom:1.1rem; }
+  .demo-note{ font-size:.78rem; color:var(--slate); background:var(--amber-pale); border-radius:var(--radius-s); padding:.7rem .9rem; margin-bottom:1.4rem; }
+  .activity-item{ padding:.75rem 0; border-bottom:1px solid var(--line-soft); font-size:.86rem; display:flex; justify-content:space-between; gap:1rem; }
+  .activity-item:last-child{ border-bottom:none; }
+  .activity-item .when{ color:var(--slate-soft); font-family:'JetBrains Mono',monospace; font-size:.72rem; white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav-row">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="19" fill="#1F3B2C"/>
+        <circle cx="20" cy="17" r="7" fill="#D98F2B"/>
+        <path d="M1 25 Q10 19 20 25 T39 25 V39 H1 Z" fill="#12241A"/>
+      </svg>
+      <div class="brand-text"><strong>Mara Horizon Trust</strong><span>Conservation Careers</span></div>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Vacancies</a>
+      <a href="employer.html">Employers</a>
+      <a href="admin.html" class="active">Admin</a>
+      <span id="navAuthSlot"></span>
+    </nav>
+  </div>
+</header>
+
+<div id="pageContent" class="wrap"></div>
+
+<footer class="site">
+  <div class="wrap foot-bottom">
+    <span>© 2026 Mara Horizon Trust. All rights reserved.</span>
+    <span>Registry system MHT-2026</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+function render(){
+  const host = document.getElementById('pageContent');
+  const user = MHT.auth.currentUser();
+
+  if(!user || user.role !== 'admin'){
+    host.innerHTML = `
+      <div class="gate">
+        <p class="eyebrow" style="justify-content:center;">Admin Access</p>
+        <h2 class="text-center" style="margin:.6rem 0 1.2rem;">Sign in to the admin console</h2>
+        <div class="demo-note">Demo admin login — email: <strong>admin@marahorizontrust.org</strong> · password: <strong>admin123</strong></div>
+        <form id="loginForm">
+          <div class="field"><label>Email</label><input type="email" id="loginEmail" required></div>
+          <div class="field"><label>Password</label><input type="password" id="loginPassword" required></div>
+          <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+        </form>
+      </div>`;
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const res = MHT.auth.login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
+      if(res.error){ MHT.toast(res.error, 'err'); return; }
+      if(res.user.role !== 'admin'){ MHT.toast('Please sign in with an admin account.', 'err'); MHT.auth.logout(); return; }
+      MHT.toast('Signed in.', 'ok'); MHT.paintAuthNav(); render();
+    });
+    return;
+  }
+
+  const allJobs = MHT.jobs.all();
+  const allApps = MHT.applications.all();
+  const allUsers = MHT.users.all();
+  const applicants = allUsers.filter(u => u.role === 'applicant');
+  const hired = allApps.filter(a => a.status === 'Hired').length;
+
+  const byCat = {};
+  allApps.forEach(a => { const j = MHT.jobs.byId(a.jobId); if(!j) return; byCat[j.category] = (byCat[j.category]||0)+1; });
+  const maxCat = Math.max(1, ...Object.values(byCat));
+
+  const activity = allApps.slice(0,8).map(a => {
+    const j = MHT.jobs.byId(a.jobId);
+    return { when:a.appliedAt, text:`${a.name} applied for ${j ? j.title : 'a vacancy'} (${a.ref})` };
+  });
+
+  host.innerHTML = `
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Admin Console</p>
+        <h1 style="font-size:clamp(1.6rem,3vw,2.2rem); margin-top:.5rem;">Platform overview</h1>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+
+    <div class="grid g4" style="margin-bottom:1.6rem;">
+      <div class="stat-card"><div class="num">${allJobs.length}</div><div class="lbl">Total Vacancies</div></div>
+      <div class="stat-card"><div class="num">${allApps.length}</div><div class="lbl">Total Applications</div></div>
+      <div class="stat-card"><div class="num">${applicants.length}</div><div class="lbl">Registered Applicants</div></div>
+      <div class="stat-card"><div class="num">${hired}</div><div class="lbl">Candidates Hired</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Applications by category</h3>
+      <div class="barchart">
+        ${Object.keys(byCat).length ? Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,n]) => `
+          <div class="row">
+            <div class="label">${cat}</div>
+            <div class="track"><div class="fill" style="width:${(n/maxCat)*100}%"></div></div>
+            <div class="val">${n}</div>
+          </div>`).join('') : '<p class="small muted">No applications yet.</p>'}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Manage vacancies (${allJobs.length})</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ref</th><th>Title</th><th>Category</th><th>Applicants</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${allJobs.map(j => `
+              <tr>
+                <td class="ref">${j.ref}</td>
+                <td>${j.title}</td>
+                <td>${j.category}</td>
+                <td>${MHT.applications.byJob(j.id).length}</td>
+                <td><span class="badge ${j.status==='open'?'badge-open':'badge-closed'}">${j.status}</span></td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" onclick="toggleJob('${j.id}')">${j.status==='open'?'Close':'Reopen'}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteJob('${j.id}')">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Manage users (${allUsers.length})</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Joined</th><th></th></tr></thead>
+          <tbody>
+            ${allUsers.map(u => `
+              <tr>
+                <td>${u.name}</td>
+                <td><span class="badge badge-received">${u.role}</span></td>
+                <td>${u.email}</td>
+                <td>${MHT.formatDate(u.createdAt)}</td>
+                <td>${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Remove</button>` : '<span class="small muted">—</span>'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Recent activity</h3>
+      ${activity.length ? activity.map(a => `<div class="activity-item"><span>${a.text}</span><span class="when">${MHT.timeAgo(a.when)}</span></div>`).join('') : '<p class="small muted">No recent activity.</p>'}
+    </div>
+  `;
+
+  document.getElementById('logoutBtn').addEventListener('click', () => { MHT.auth.logout(); MHT.paintAuthNav(); render(); });
+}
+
+function toggleJob(id){
+  const job = MHT.jobs.byId(id);
+  MHT.jobs.update(id, { status: job.status==='open' ? 'closed' : 'open' });
+  MHT.toast('Vacancy updated.', 'ok'); render();
+}
+function deleteJob(id){
+  if(!confirm('Delete this vacancy? This cannot be undone.')) return;
+  MHT.jobs.remove(id); MHT.toast('Vacancy deleted.', 'ok'); render();
+}
+function deleteUser(id){
+  if(!confirm('Remove this user account? This cannot be undone.')) return;
+  MHT.users.remove(id); MHT.toast('User removed.', 'ok'); render();
+}
+
+render();
+</script>
+</body>
+</html>
